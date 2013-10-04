@@ -14,5 +14,8 @@
   "license": "BSD",
   "bugs": {
     "url": "https://github.com/ntrace/webhook/issues"
+  },
+  "dependencies": {
+    "restify": "~2.6.0"
   }
 }
