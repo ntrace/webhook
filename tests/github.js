@@ -11,8 +11,6 @@ server.run(function() {
 		url: 'http://localhost:8081/github'
 	};
 
-	console.log(options);
-
 	request(options, function(err, res, body) {
 		if (err) throw err;
 

@@ -1,11 +1,13 @@
 var net    = require('net');
+var Domain = require('domain');
 var rpc    = require('rpc-stream');
 var cfg    = require('../cfg');
 
 var github = exports;
 
 github.run = function github_run(req, res, next) {
-  try {
+  var d = Domain.create();
+  d.run(function() {
     var uuid = res._uuid;
     var payload = req.body;
 
@@ -25,8 +27,6 @@ github.run = function github_run(req, res, next) {
       // parse the payload from github
       //
       payload = github._parsePayload(payload);
-
-      console.log('parsed payload: %j', payload);
 
       if (payload.parsed) {
 
@@ -54,29 +54,17 @@ github.run = function github_run(req, res, next) {
         // connect to the dispatcher
         //
         var dispatcher = rpc();
-        console.log('connecting to dispatcher port', cfg.dispatcher.port)
         var dispatcherConn = net.connect(cfg.dispatcher.port);
-        dispatcherConn.on('error', onError);
         dispatcherConn.pipe(dispatcher).pipe(dispatcherConn);
 
         //
         // push the payload to the dispatcher
         //
         dispatcher.wrap(['push']).push(payload, function pushed(err) {
-          if (err) return onError(err);
+          if (err) throw err;
           res.send(200, "OK");
           dispatcherConn.end();
         });
-
-        function onError(err) {
-          res.send(500, {
-            msg: err.message,
-            code: "dispatcher:error",
-            uuid: uuid
-          });
-          dispatcherConn.destroy();
-        }
-
 
       } else {
         res.send(400, {
@@ -93,15 +81,21 @@ github.run = function github_run(req, res, next) {
         uuid: uuid
       });
     }
-  } catch (err) {
-    console.error(err.stack);
-    res.send(500, {
-      msg: err.message,
-      stack: err.stack,
-      uuid: uuid
-    });
-  }
+  });
 
+  var replied = false;
+  d.on('error', function(err) {
+    console.error(err.stack);
+    if (! replied) {
+      replied = true;
+      res.send(500, {
+        msg: err.message,
+        stack: err.stack,
+        uuid: uuid
+      });
+    }
+    d.dispose();
+  });
 };
 
 github._parsePayload = function _parsePayload(payload) {
@@ -121,4 +115,3 @@ github._parsePayload = function _parsePayload(payload) {
 
   return payload;
 };
-// lint: 19 errors
