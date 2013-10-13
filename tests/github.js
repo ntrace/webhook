@@ -8,7 +8,7 @@ server.run(function() {
 		encoding: 'utf8',
 		json: require('./github_payload'),
 		method: 'POST',
-		url: 'http://localhost:8081/github'
+		url: 'http://localhost:8083/github'
 	};
 
 	request(options, function(err, res, body) {
