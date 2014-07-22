@@ -16,7 +16,8 @@
     "url": "https://github.com/ntrace/webhook/issues"
   },
   "dependencies": {
-    "restify": "~2.6.0"
+    "restify": "~2.6.0",
+    "rpc-stream": "~2.1.1"
   },
   "devDependencies": {
     "request": "~2.27.0"
